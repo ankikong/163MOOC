@@ -87,15 +87,18 @@ impl headerGetter {
     pub fn getHeader(&self, cType:&str) -> header::HeaderMap {
         let mut hder = header::HeaderMap::new();
         let cookie = self.value.as_str();
-        hder.append("origin", "https://www.icourse163.org".parse().unwrap());
-        hder.append("referer", "https://www.icourse163.org/spoc/learn/HNNY-1451765171?tid=1452238457".parse().unwrap());
-        hder.append("content-type", cType.parse().unwrap());
-        hder.append("cookie", cookie.parse().unwrap());
+        hder.append("origin", "https://www.icourse163.org".parse().expect("origin failed"));
+        hder.append("referer", "https://www.icourse163.org/spoc/learn/HNNY-1451765171?tid=1452238457".parse().expect("referer failed"));
+        hder.append("content-type", cType.parse().expect("content-type failed"));
+        hder.append("cookie", cookie.parse().expect("cookie failed"));
         hder
     }
     pub fn setCookie(&mut self, cookie:String) {
         if cookie.ends_with("\n") {
-            self.value = cookie[0..cookie.len()-1].to_string()
+            self.value = cookie[0..cookie.len()-1].to_string();
+            if self.value.ends_with("\r") {
+                self.value = self.value[0..self.value.len()-1].to_string()
+            }
         } else {
             self.value = cookie
         }
@@ -134,9 +137,9 @@ fn main() {
           .headers(hdgen.getHeader("text/plain"))
           .body(format!("callCount=1\nscriptSessionId=${{scriptSessionId}}190\nc0-scriptName=CourseBean\nc0-methodName=getLastLearnedMocTermDto\nc0-id=0\nc0-param0=number:{}\nbatchId=1583152407811", tid))
           .send()
-          .unwrap()
+          .expect("request failed")
           .text()
-          .unwrap();
+          .expect("get content failed");
 
         println!("start signing ppt");
         signForPPT(&cl, &rs, csrf, &hdgen);
